@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Secure Video Similarity Detection</title>
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .box {
+            width: 400px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>Upload Video</h2>
+
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="video" required>
+        <br><br>
+        <button type="submit">Upload & Analyze</button>
+    </form>
+
+    {% if result %}
+        <hr>
+        {% if result.status == "unique" %}
+            <h3 style="color:green;">✅ Unique Video</h3>
+        {% else %}
+            <h3 style="color:red;">⚠️ Similar / Duplicate Video</h3>
+            <p>Matched with: {{ result.matched }}</p>
+            <p>Similarity score: {{ result.score }}</p>
+        {% endif %}
+    {% endif %}
+</div>
+
+</body>
+</html>
