@@ -1,38 +1,35 @@
+import { useEffect, useState } from "react";
 import DashNavbar from "../components/DashNavbar";
 import SummaryCards from "../components/SummaryCards";
 import AnalysisTable from "../components/AnalysisTable";
 
 export default function Dashboard() {
-  const summary = {
-    totalVideos: 42,
-    uniqueVideos: 31,
-    duplicateVideos: 11,
-    avgSimilarity: 0.68,
-  };
+  const [summary, setSummary] = useState({
+    totalVideos: 0,
+    uniqueVideos: 0,
+    duplicateVideos: 0,
+  });
 
-  const recent = [
-    {
-      id: 1,
-      name: "lecture_recording.mp4",
-      status: "Unique",
-      score: "-",
-      date: "2024-03-18",
-    },
-    {
-      id: 2,
-      name: "movie_clip.mp4",
-      status: "Duplicate",
-      score: "0.91",
-      date: "2024-03-17",
-    },
-    {
-      id: 3,
-      name: "conference_talk.mp4",
-      status: "Unique",
-      score: "-",
-      date: "2024-03-16",
-    },
-  ];
+  const [recent, setRecent] = useState([]);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/dashboard/summary")
+      .then(res => res.json())
+      .then(data => {
+        console.log("📊 Summary API data:", data);
+        setSummary({
+          totalVideos: data.totalVideos ?? 0,
+          uniqueVideos: data.uniqueVideos ?? 0,
+          duplicateVideos: data.duplicateVideos ?? 0,
+        });
+      })
+      .catch(err => console.error("Summary fetch failed", err));
+
+    fetch("http://localhost:5000/dashboard/recent")
+      .then(res => res.json())
+      .then(data => setRecent(data))
+      .catch(err => console.error("Recent fetch failed", err));
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0b0f19] text-white">

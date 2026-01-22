@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 export default function ResultSection({
   result,
@@ -6,6 +7,8 @@ export default function ResultSection({
   onReset,
   resetting,
 }) {
+  const navigate = useNavigate();
+
   // keep component mounted during reset fade
   if (!result && !resetting) return null;
 
@@ -34,7 +37,7 @@ export default function ResultSection({
       >
         <h2
           className={`text-3xl font-bold mb-6 ${
-            isUnique ? "text-green-700" : "text-red-800"
+            isUnique ? "text-green-400" : "text-red-400"
           }`}
         >
           {isUnique
@@ -67,13 +70,27 @@ export default function ResultSection({
           </p>
         )}
 
-        <button
-          onClick={onReset}
-          className="mt-6 px-8 py-3 rounded-xl
-                     bg-blue-600 hover:bg-blue-700 font-medium"
-        >
-          Upload Another Video
-        </button>
+        {/* ACTION BUTTONS */}
+        <div className="mt-8 flex justify-center gap-4">
+          <button
+            onClick={onReset}
+            className="px-8 py-3 rounded-xl
+                       bg-blue-600 hover:bg-blue-700
+                       transition font-medium"
+          >
+            Upload Another Video
+          </button>
+
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="px-8 py-3 rounded-xl
+                       border border-white/20 text-slate-200
+                       hover:bg-white/10 hover:border-white/30
+                       transition font-medium"
+          >
+            Go to Dashboard
+          </button>
+        </div>
       </motion.div>
     </section>
   );

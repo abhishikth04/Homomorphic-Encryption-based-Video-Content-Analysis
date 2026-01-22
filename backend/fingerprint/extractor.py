@@ -3,17 +3,9 @@ import torch
 import numpy as np
 from torchvision import models, transforms
 
-# ----------------------------------
-# Load pretrained CNN (Feature Extractor)
-# ----------------------------------
-
 _model = models.resnet18(pretrained=True)
 _model = torch.nn.Sequential(*list(_model.children())[:-1])
 _model.eval()
-
-# ----------------------------------
-# Frame preprocessing
-# ----------------------------------
 
 _preprocess = transforms.Compose([
     transforms.ToPILImage(),
@@ -25,16 +17,7 @@ _preprocess = transforms.Compose([
     )
 ])
 
-# ----------------------------------
-# Extract video fingerprint
-# ----------------------------------
-
 def extract_video_fingerprint(video_path: str, frame_interval: int = 30) -> np.ndarray:
-    """
-    Extracts a fixed-length fingerprint vector from a video
-    using CNN-based frame embeddings and temporal aggregation.
-    """
-
     cap = cv2.VideoCapture(video_path)
     features = []
     frame_count = 0
@@ -50,20 +33,15 @@ def extract_video_fingerprint(video_path: str, frame_interval: int = 30) -> np.n
 
             with torch.no_grad():
                 embedding = _model(frame)
-                embedding = embedding.squeeze().numpy()
-                features.append(embedding)
+                features.append(embedding.squeeze().numpy())
 
         frame_count += 1
 
     cap.release()
 
     if not features:
-        raise ValueError("No frames extracted from video")
+        raise ValueError("No frames extracted")
 
-    # Temporal aggregation (mean pooling)
     fingerprint = np.mean(features, axis=0)
-
-    # Normalize fingerprint
     fingerprint = fingerprint / np.linalg.norm(fingerprint)
-
     return fingerprint

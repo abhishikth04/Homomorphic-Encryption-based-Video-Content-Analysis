@@ -7,25 +7,44 @@ export default function UploadCard({ onStart, onResult }) {
   const [file, setFile] = useState(null);
 
   const handleUpload = async () => {
-    if (!file) return;
+  if (!file) return;
 
-    onStart();
+  onStart();
 
-    const formData = new FormData();
-    formData.append("video", file);
+  const formData = new FormData();
+  formData.append("video", file);
 
-    try {
-      const res = await fetch("http://localhost:5000/analyze", {
-        method: "POST",
-        body: formData,
-      });
+  try {
+    const res = await fetch("http://localhost:5000/analyze", {
+      method: "POST",
+      body: formData,
+    });
 
-      const data = await res.json();
-      onResult(data);
-    } catch (err) {
-      alert("Backend error. Please try again.");
+    // ✅ Explicit backend failure check
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("Backend response error:", text);
+      throw new Error("Backend returned non-200");
     }
-  };
+
+    const data = await res.json();
+
+    // ✅ Normalize backend response (VERY IMPORTANT)
+    const safeResult = {
+      status: data.status,
+      score: typeof data.score === "number" ? data.score : null,
+      matched: data.matched ?? null,
+    };
+
+    console.log("✅ Backend result:", safeResult);
+    onResult(safeResult);
+
+  } catch (err) {
+    console.error("❌ Upload failed:", err);
+    alert("Backend error. Please try again.");
+  }
+};
+
 
   return (
     <motion.div

@@ -5,20 +5,13 @@ export default function SummaryCards({ data }) {
     totalVideos = 0,
     uniqueVideos = 0,
     duplicateVideos = 0,
-    avgSimilarity = 0,
   } = data;
 
   return (
-    <section className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      
+    <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <Card title="Total Videos" value={totalVideos} />
       <Card title="Unique Videos" value={uniqueVideos} color="green" />
       <Card title="Duplicate Videos" value={duplicateVideos} color="red" />
-      <Card
-        title="Avg Similarity"
-        value={`${Number(avgSimilarity).toFixed(2)}`}
-      />
-
     </section>
   );
 }
