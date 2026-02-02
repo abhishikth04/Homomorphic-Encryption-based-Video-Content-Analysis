@@ -2,11 +2,12 @@ from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
 import os
-from database.mongo import get_dashboard_summary, get_recent_analysis
-
 
 from services.analyzer import analyze_video
-from database.mongo import get_statistics, get_recent_records
+from database.mongo import (
+    get_dashboard_summary,
+    get_recent_analysis
+)
 
 app = Flask(__name__)
 CORS(app)
@@ -40,16 +41,18 @@ def analyze():
         return jsonify({"error": "No video file provided"}), 400
 
     file = request.files["video"]
-
     if file.filename == "":
         return jsonify({"error": "Empty filename"}), 400
+
+    # 🔹 Mode sent from frontend (classical / quantum)
+    mode = request.form.get("mode", "quantum")
 
     filename = secure_filename(file.filename)
     video_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
     file.save(video_path)
 
     try:
-        result = analyze_video(video_path)
+        result = analyze_video(video_path, mode)
     except Exception as e:
         print("❌ Backend Error:", e)
         return jsonify({"error": str(e)}), 500
@@ -65,7 +68,8 @@ def analyze():
 
 @app.route("/dashboard/summary", methods=["GET"])
 def dashboard_summary():
-    return jsonify(get_dashboard_summary()), 200
+    mode = request.args.get("mode", "quantum")
+    return jsonify(get_dashboard_summary(mode)), 200
 
 # -----------------------------------
 # DASHBOARD: Recent Analysis Table
@@ -73,7 +77,8 @@ def dashboard_summary():
 
 @app.route("/dashboard/recent", methods=["GET"])
 def dashboard_recent():
-    return jsonify(get_recent_analysis()), 200
+    mode = request.args.get("mode", "quantum")
+    return jsonify(get_recent_analysis(mode)), 200
 
 # -----------------------------------
 # Entry Point

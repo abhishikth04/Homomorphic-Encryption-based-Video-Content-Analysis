@@ -18,80 +18,69 @@ db = client[DB_NAME]
 collection = db[COLLECTION_NAME]
 
 # -----------------------------------
-# Insert Analysis Result
+# Insert FULL Analysis Result
 # -----------------------------------
 
-def insert_analysis_result(
+def insert_full_analysis_result(
     video_name: str,
-    fingerprint: list,
-    status: str,
-    similarity_score: float | None,
-    matched_video: str | None
+
+    classical_fp: list,
+    classical_status: str,
+    classical_score: float | None,
+    classical_matched: str | None,
+
+    quantum_fp: list,
+    quantum_status: str,
+    quantum_score: float | None,
+    quantum_matched: str | None
 ):
     document = {
         "video_name": video_name,
-        "fingerprint": fingerprint,
-        "status": status,
-        "similarity_score": similarity_score,
-        "matched_video": matched_video,
+
+        "classical": {
+            "fingerprint": classical_fp,
+            "status": classical_status,
+            "similarity_score": classical_score,
+            "matched_video": classical_matched
+        },
+
+        "quantum": {
+            "fingerprint": quantum_fp,
+            "status": quantum_status,
+            "similarity_score": quantum_score,
+            "matched_video": quantum_matched
+        },
+
         "created_at": datetime.utcnow()
     }
+
     collection.insert_one(document)
 
 # -----------------------------------
-# Fetch All Records
+# Fetch Records (MODE-SPECIFIC)
 # -----------------------------------
 
-def fetch_all_records():
-    return list(collection.find({}, {"_id": 0}))
+def fetch_all_records(mode: str):
+    """
+    mode: 'classical' or 'quantum'
+    """
+    records = list(collection.find({}, {"_id": 0}))
+    extracted = []
+
+    for r in records:
+        if mode in r:
+            extracted.append({
+                "video_name": r["video_name"],
+                **r[mode]
+            })
+
+    return extracted
 
 # -----------------------------------
-# Dashboard Statistics
+# DASHBOARD SUMMARY
 # -----------------------------------
 
-def get_statistics():
-    total = collection.count_documents({})
-    unique_count = collection.count_documents({"status": "Unique"})
-    duplicate_count = collection.count_documents({"status": "Similar"})
-
-    avg_similarity_pipeline = [
-        {"$match": {"similarity_score": {"$ne": None}}},
-        {"$group": {"_id": None, "avg": {"$avg": "$similarity_score"}}}
-    ]
-
-    avg_result = list(collection.aggregate(avg_similarity_pipeline))
-    avg_similarity = avg_result[0]["avg"] if avg_result else None
-
-    return {
-        "totalVideos": total,
-        "uniqueVideos": unique_count,
-        "duplicateVideos": duplicate_count,
-        "avgSimilarity": avg_similarity
-    }
-
-# -----------------------------------
-# Recent Analysis Records
-# -----------------------------------
-
-def get_recent_records(limit=10):
-    records = collection.find(
-        {},
-        {
-            "_id": 0,
-            "video_name": 1,
-            "status": 1,
-            "similarity_score": 1,
-            "created_at": 1
-        }
-    ).sort("created_at", -1).limit(limit)
-
-    return list(records)
-
-# -----------------------------------
-# DASHBOARD SUMMARY (AGGREGATION)
-# -----------------------------------
-
-def get_dashboard_summary():
+def get_dashboard_summary(mode: str):
     records = list(collection.find({}))
 
     total = len(records)
@@ -99,10 +88,12 @@ def get_dashboard_summary():
     duplicate = 0
 
     for r in records:
-        if r.get("status") == "Unique":
-            unique += 1
-        elif r.get("status") == "Similar":
-            duplicate += 1
+        if mode in r:
+            status = r[mode]["status"]
+            if status == "Unique":
+                unique += 1
+            elif status == "Similar":
+                duplicate += 1
 
     return {
         "totalVideos": total,
@@ -110,26 +101,22 @@ def get_dashboard_summary():
         "duplicateVideos": duplicate
     }
 
-
-
 # -----------------------------------
 # DASHBOARD RECENT ANALYSIS
 # -----------------------------------
 
-def get_recent_analysis(limit=10):
-    records = collection.find(
-        {},
-        {"_id": 0}
-    ).sort("created_at", -1).limit(limit)
+def get_recent_analysis(mode: str, limit=10):
+    records = collection.find({}, {"_id": 0}).sort("created_at", -1).limit(limit)
 
     formatted = []
     for idx, r in enumerate(records, start=1):
-        formatted.append({
-            "id": idx,
-            "name": r.get("video_name"),
-            "status": r.get("status"),
-            "score": r.get("similarity_score"),
-            "date": r["created_at"].strftime("%Y-%m-%d")
-        })
+        if mode in r:
+            formatted.append({
+                "id": idx,
+                "name": r["video_name"],
+                "status": r[mode]["status"],
+                "score": r[mode]["similarity_score"],
+                "date": r["created_at"].strftime("%Y-%m-%d")
+            })
 
     return formatted

@@ -6,45 +6,47 @@ export default function UploadCard({ onStart, onResult }) {
   const fileInputRef = useRef(null);
   const [file, setFile] = useState(null);
 
+  // 🔹 NEW: Analysis mode
+  const [mode, setMode] = useState("quantum");
+
   const handleUpload = async () => {
-  if (!file) return;
+    if (!file) return;
 
-  onStart();
+    onStart();
 
-  const formData = new FormData();
-  formData.append("video", file);
+    const formData = new FormData();
+    formData.append("video", file);
+    formData.append("mode", mode); // 🔹 send mode to backend
 
-  try {
-    const res = await fetch("http://localhost:5000/analyze", {
-      method: "POST",
-      body: formData,
-    });
+    try {
+      const res = await fetch("http://localhost:5000/analyze", {
+        method: "POST",
+        body: formData,
+      });
 
-    // ✅ Explicit backend failure check
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("Backend response error:", text);
-      throw new Error("Backend returned non-200");
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Backend response error:", text);
+        throw new Error("Backend returned non-200");
+      }
+
+      const data = await res.json();
+
+      const safeResult = {
+        status: data.status,
+        score: typeof data.score === "number" ? data.score : null,
+        matched: data.matched ?? null,
+        mode, // 🔹 attach mode for UI display if needed
+      };
+
+      console.log("✅ Backend result:", safeResult);
+      onResult(safeResult);
+
+    } catch (err) {
+      console.error("❌ Upload failed:", err);
+      alert("Backend error. Please try again.");
     }
-
-    const data = await res.json();
-
-    // ✅ Normalize backend response (VERY IMPORTANT)
-    const safeResult = {
-      status: data.status,
-      score: typeof data.score === "number" ? data.score : null,
-      matched: data.matched ?? null,
-    };
-
-    console.log("✅ Backend result:", safeResult);
-    onResult(safeResult);
-
-  } catch (err) {
-    console.error("❌ Upload failed:", err);
-    alert("Backend error. Please try again.");
-  }
-};
-
+  };
 
   return (
     <motion.div
@@ -64,6 +66,35 @@ export default function UploadCard({ onStart, onResult }) {
       <p className="text-gray-400 mb-10">
         Drag & drop or select a video file to begin analysis
       </p>
+
+      {/* 🔹 QUANTUM MODE TOGGLE */}
+      <div className="mb-8 flex items-center justify-center gap-4">
+        <span className="text-sm text-gray-400">Analysis Mode:</span>
+
+        <button
+          onClick={() => setMode("classical")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition
+            ${
+              mode === "classical"
+                ? "bg-gray-700 text-white"
+                : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+            }`}
+        >
+          Classical
+        </button>
+
+        <button
+          onClick={() => setMode("quantum")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition
+            ${
+              mode === "quantum"
+                ? "bg-purple-700 text-white"
+                : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+            }`}
+        >
+          Quantum-Inspired
+        </button>
+      </div>
 
       {/* Hidden input */}
       <input
@@ -85,7 +116,6 @@ export default function UploadCard({ onStart, onResult }) {
         Choose Video
       </button>
 
-      {/* File name (fixed height to avoid layout jump) */}
       <div className="h-6 mb-6">
         {file && (
           <p className="text-sm text-gray-300">
@@ -94,7 +124,6 @@ export default function UploadCard({ onStart, onResult }) {
         )}
       </div>
 
-      {/* Upload button */}
       <button
         onClick={handleUpload}
         disabled={!file}
