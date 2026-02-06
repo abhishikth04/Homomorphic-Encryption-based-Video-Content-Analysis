@@ -5,18 +5,18 @@ import { useRef, useState } from "react";
 export default function UploadCard({ onStart, onResult }) {
   const fileInputRef = useRef(null);
   const [file, setFile] = useState(null);
-
-  // 🔹 NEW: Analysis mode
   const [mode, setMode] = useState("quantum");
+  const [uploading, setUploading] = useState(false);
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (!file || uploading) return;
 
+    setUploading(true);
     onStart();
 
     const formData = new FormData();
     formData.append("video", file);
-    formData.append("mode", mode); // 🔹 send mode to backend
+    formData.append("mode", mode);
 
     try {
       const res = await fetch("http://localhost:5000/analyze", {
@@ -36,15 +36,15 @@ export default function UploadCard({ onStart, onResult }) {
         status: data.status,
         score: typeof data.score === "number" ? data.score : null,
         matched: data.matched ?? null,
-        mode, // 🔹 attach mode for UI display if needed
+        mode,
       };
 
-      console.log("✅ Backend result:", safeResult);
       onResult(safeResult);
-
     } catch (err) {
       console.error("❌ Upload failed:", err);
       alert("Backend error. Please try again.");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -52,7 +52,7 @@ export default function UploadCard({ onStart, onResult }) {
     <motion.div
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 1.2, ease: "easeOut" }}
+      transition={{ duration: 1.1, ease: "easeOut" }}
       className="max-w-2xl w-[90%] rounded-2xl border border-white/20
                  bg-gray-900/60 backdrop-blur-md p-14 text-center
                  shadow-[0_30px_80px_rgba(0,0,0,0.5)]"
@@ -67,34 +67,52 @@ export default function UploadCard({ onStart, onResult }) {
         Drag & drop or select a video file to begin analysis
       </p>
 
-      {/* 🔹 QUANTUM MODE TOGGLE */}
-      <div className="mb-8 flex items-center justify-center gap-4">
-        <span className="text-sm text-gray-400">Analysis Mode:</span>
+      {/* 🔹 MODE TOGGLE (NEW DESIGN) */}
+      {/* 🔹 ANALYSIS MODE TOGGLE — FINAL FIX */}
+            <div className="mb-8 flex flex-col items-center gap-2">
+              <span className="text-sm text-gray-400">Analysis Mode</span>
 
-        <button
-          onClick={() => setMode("classical")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition
-            ${
-              mode === "classical"
-                ? "bg-gray-700 text-white"
-                : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-            }`}
-        >
-          Classical
-        </button>
+              <div className="relative flex w-56 h-11 rounded-full bg-gray-800 p-1">
+                
+                {/* Classical */}
+                <button
+                  type="button"
+                  onClick={() => setMode("classical")}
+                  className="relative z-10 flex-1 text-sm font-medium"
+                >
+                  {mode === "classical" && (
+                    <motion.div
+                      layoutId="active-pill"
+                      className="absolute inset-0 rounded-full bg-blue-600"
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    />
+                  )}
+                  <span className={`relative ${mode === "classical" ? "text-white" : "text-gray-400"}`}>
+                    Classical
+                  </span>
+                </button>
 
-        <button
-          onClick={() => setMode("quantum")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition
-            ${
-              mode === "quantum"
-                ? "bg-purple-700 text-white"
-                : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-            }`}
-        >
-          Quantum-Inspired
-        </button>
-      </div>
+                {/* Quantum */}
+                <button
+                  type="button"
+                  onClick={() => setMode("quantum")}
+                  className="relative z-10 flex-1 text-sm font-medium"
+                >
+                  {mode === "quantum" && (
+                    <motion.div
+                      layoutId="active-pill"
+                      className="absolute inset-0 rounded-full bg-purple-700"
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    />
+                  )}
+                  <span className={`relative ${mode === "quantum" ? "text-white" : "text-gray-400"}`}>
+                    Quantum
+                  </span>
+                </button>
+
+              </div>
+            </div>
+
 
       {/* Hidden input */}
       <input
@@ -126,15 +144,15 @@ export default function UploadCard({ onStart, onResult }) {
 
       <button
         onClick={handleUpload}
-        disabled={!file}
+        disabled={!file || uploading}
         className={`px-10 py-4 rounded-2xl text-lg font-medium transition-all duration-300 ease-out
           ${
-            file
-              ? "bg-blue-600 text-white hover:bg-blue-700 hover:scale-[1.04] active:scale-[0.98] shadow-[0_10px_30px_rgba(37,99,235,0.35)]"
+            file && !uploading
+              ? "bg-blue-600 text-white hover:bg-blue-700 hover:scale-[1.04]"
               : "bg-gray-700 text-gray-400 cursor-not-allowed"
           }`}
       >
-        Upload & Analyze
+        {uploading ? "Analyzing..." : "Upload & Analyze"}
       </button>
     </motion.div>
   );

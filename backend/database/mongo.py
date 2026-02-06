@@ -116,7 +116,12 @@ def get_recent_analysis(mode: str, limit=10):
                 "name": r["video_name"],
                 "status": r[mode]["status"],
                 "score": r[mode]["similarity_score"],
-                "date": r["created_at"].strftime("%Y-%m-%d")
+                "mode": mode,  # 🔴 REQUIRED
+                "date": r["created_at"].strftime("%Y-%m-%d"),
             })
+
+    return formatted
+
+
 
     return formatted

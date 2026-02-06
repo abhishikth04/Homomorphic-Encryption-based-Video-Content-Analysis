@@ -8,6 +8,9 @@ import HeroSection from "./components/HeroSection";
 
 import Dashboard from "./pages/Dashboard";
 import ExplainSystem from "./pages/ExplainSystem";
+import Analysis from "./pages/Analysis";
+import Performance from "./pages/Performance";
+
 
 /* ============================= */
 /* UPLOAD + ANALYSIS FLOW */
@@ -161,6 +164,8 @@ export default function App() {
       <Route path="/" element={<UploadFlow />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/explain" element={<ExplainSystem />} />
+      <Route path="/analysis" element={<Analysis />} />
+       <Route path="/performance" element={<Performance />} />
     </Routes>
   );
 }

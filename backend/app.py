@@ -66,20 +66,16 @@ def analyze():
 # DASHBOARD: Summary Cards
 # -----------------------------------
 
-@app.route("/dashboard/summary", methods=["GET"])
+@app.route("/dashboard/summary")
 def dashboard_summary():
     mode = request.args.get("mode", "quantum")
-    return jsonify(get_dashboard_summary(mode)), 200
+    return jsonify(get_dashboard_summary(mode))
 
-# -----------------------------------
-# DASHBOARD: Recent Analysis Table
-# -----------------------------------
-
-@app.route("/dashboard/recent", methods=["GET"])
+@app.route("/dashboard/recent")
 def dashboard_recent():
     mode = request.args.get("mode", "quantum")
-    return jsonify(get_recent_analysis(mode)), 200
-
+    return jsonify(get_recent_analysis(mode))
+    
 # -----------------------------------
 # Entry Point
 # -----------------------------------
