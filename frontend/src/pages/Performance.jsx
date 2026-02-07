@@ -1,74 +1,83 @@
-import { motion } from "framer-motion";
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 export default function Performance() {
   const [mode, setMode] = useState("quantum");
 
   const metrics = {
-    classical: [
-      {
-        title: "Similarity Separability",
-        value: 0.65,
-        description:
-          "Moderate separation between unique and duplicate videos in the encrypted similarity space.",
-      },
-      {
-        title: "Decision Stability",
-        value: 0.62,
-        description:
-          "Similarity decisions remain stable under encrypted computation but are sensitive to overlap.",
-      },
-      {
-        title: "Noise Resilience",
-        value: 0.58,
-        description:
-          "Limited tolerance to homomorphic approximation noise in compact feature space.",
-      },
-      {
-        title: "Scalability Readiness",
-        value: 0.60,
-        description:
-          "Decision confidence gradually degrades as the encrypted reference database grows.",
-      },
-    ],
-    quantum: [
-      {
-        title: "Similarity Separability",
-        value: 0.82,
-        description:
-          "Enhanced separation due to nonlinear quantum-inspired feature expansion.",
-      },
-      {
-        title: "Decision Stability",
-        value: 0.79,
-        description:
-          "More consistent encrypted similarity decisions with reduced ambiguity.",
-      },
-      {
-        title: "Noise Resilience",
-        value: 0.76,
-        description:
-          "Higher robustness against CKKS approximation noise after feature mapping.",
-      },
-      {
-        title: "Scalability Readiness",
-        value: 0.74,
-        description:
-          "Improved adaptability to increasing encrypted reference size.",
-      },
-    ],
+    classical: {
+      separability: 0.65,
+      stability: 0.62,
+      noise: 0.58,
+      scalability: 0.60,
+    },
+    quantum: {
+      separability: 0.82,
+      stability: 0.79,
+      noise: 0.76,
+      scalability: 0.74,
+    },
   };
 
-  const data = metrics[mode];
+  const classical = metrics.classical;
+  const quantum = metrics.quantum;
+
+  const sections = [
+    {
+      title: "Feature-Space Behavior",
+      description:
+        "How effectively the encrypted feature space separates and preserves semantic information.",
+      items: [
+        {
+          key: "separability",
+          label: "Similarity Separability",
+          explanation:
+            "Ability of the feature space to distinguish unique and duplicate videos under encryption.",
+        },
+        {
+          key: "noise",
+          label: "Noise Resilience",
+          explanation:
+            "Robustness against approximation noise introduced by CKKS encryption.",
+        },
+      ],
+    },
+    {
+      title: "Decision Reliability",
+      description:
+        "Stability and consistency of similarity decisions across encrypted comparisons.",
+      items: [
+        {
+          key: "stability",
+          label: "Decision Stability",
+          explanation:
+            "Consistency of similarity outcomes across repeated encrypted evaluations.",
+        },
+      ],
+    },
+    {
+      title: "System Adaptability",
+      description:
+        "Behavior of the system as the encrypted reference database grows.",
+      items: [
+        {
+          key: "scalability",
+          label: "Scalability Readiness",
+          explanation:
+            "Ability to maintain decision quality as reference fingerprints increase.",
+        },
+      ],
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-[#0b0f19] text-white px-10 py-10">
       {/* Header */}
       <div className="mb-10">
-        <h1 className="text-3xl font-bold">System Performance Metrics</h1>
+        <h1 className="text-3xl font-bold">System Performance Characteristics</h1>
         <p className="text-slate-400 mt-2 max-w-2xl">
-          Visual interpretation of system behavior under encrypted similarity
-          computation in classical and quantum-inspired feature spaces.
+          High-level characterization of encrypted similarity behavior under
+          classical and quantum-inspired feature spaces.
         </p>
       </div>
 
@@ -92,84 +101,100 @@ export default function Performance() {
         ))}
       </div>
 
-      {/* Feature Separability Visualization */}
-      <div className="bg-black/40 border border-white/10 rounded-2xl p-6 mb-14">
-        <h2 className="text-lg font-semibold mb-2">
-          Feature Separability Visualization
-        </h2>
-        <p className="text-xs text-slate-400 mb-6 max-w-2xl">
-          Conceptual visualization of how video fingerprints distribute in the
-          similarity space. Quantum-inspired mapping increases separability
-          before encryption.
-        </p>
-
-        <div className="relative h-64 rounded-xl bg-black/60 border border-white/10 overflow-hidden">
-          {[...Array(30)].map((_, i) => (
-            <motion.div
-              key={i}
-              className={`absolute w-2 h-2 rounded-full ${
-                i % 3 === 0 ? "bg-red-400" : "bg-green-400"
-              }`}
-              initial={{ opacity: 0 }}
-              animate={{
-                opacity: 1,
-                left:
-                  mode === "quantum"
-                    ? `${20 + Math.random() * 60}%`
-                    : `${35 + Math.random() * 30}%`,
-                top:
-                  mode === "quantum"
-                    ? `${20 + Math.random() * 60}%`
-                    : `${35 + Math.random() * 30}%`,
-              }}
-              transition={{ duration: 0.8 }}
-            />
-          ))}
-        </div>
-
-        <div className="flex justify-between text-xs text-slate-400 mt-3">
-          <span>Overlapping Region</span>
-          <span>Separated Region</span>
-        </div>
-      </div>
-
-      {/* Metric Bars */}
-      <div className="space-y-8">
-        {data.map((metric, idx) => (
-          <div
-            key={idx}
-            className="bg-black/40 border border-white/10 rounded-2xl p-6"
-          >
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-semibold">{metric.title}</h3>
-              <span className="text-sm text-slate-300">
-                {(metric.value * 100).toFixed(0)}%
-              </span>
-            </div>
-
-            <div className="relative h-2 rounded-full bg-white/10 overflow-hidden">
-              <motion.div
-                className={`h-full ${
-                  mode === "quantum"
-                    ? "bg-purple-400"
-                    : "bg-blue-400"
-                }`}
-                initial={{ width: 0 }}
-                animate={{ width: `${metric.value * 100}%` }}
-                transition={{ duration: 0.8 }}
-              />
-            </div>
-
-            <div className="flex justify-between text-xs text-slate-500 mt-1">
-              <span>Lower</span>
-              <span>Higher</span>
-            </div>
-
-            <p className="text-xs text-slate-400 mt-3 max-w-3xl">
-              {metric.description}
+      {/* Sections */}
+      <div className="space-y-14">
+        {sections.map((section, idx) => (
+          <div key={idx}>
+            <h2 className="text-xl font-semibold mb-2">{section.title}</h2>
+            <p className="text-sm text-slate-400 mb-6 max-w-3xl">
+              {section.description}
             </p>
+
+            <div className="space-y-6">
+              {section.items.map((item) => {
+                const cVal = classical[item.key];
+                const qVal = quantum[item.key];
+                const activeVal = mode === "quantum" ? qVal : cVal;
+                const delta = ((qVal - cVal) * 100).toFixed(0);
+
+                return (
+                  <div
+                    key={item.key}
+                    className="bg-black/40 border border-white/10 rounded-2xl p-6"
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="font-semibold">{item.label}</h3>
+                      <span className="text-sm text-slate-300">
+                        {(activeVal * 100).toFixed(0)}%
+                      </span>
+                    </div>
+
+                    {/* Bar */}
+                    <div className="relative h-2 rounded-full bg-white/10 overflow-hidden">
+                      <motion.div
+                        className={`h-full ${
+                          mode === "quantum"
+                            ? "bg-purple-400"
+                            : "bg-blue-400"
+                        }`}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${activeVal * 100}%` }}
+                        transition={{ duration: 0.8 }}
+                      />
+                    </div>
+
+                    {/* Delta */}
+                    <div className="mt-2 text-xs text-slate-400">
+                      Quantum improvement:{" "}
+                      <span className="text-purple-400 font-medium">
+                        +{delta}%
+                      </span>
+                    </div>
+
+                    {/* Explanation */}
+                    <p className="text-xs text-slate-400 mt-3 max-w-3xl">
+                      {item.explanation}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         ))}
+      </div>
+
+      {/* Confidence Spectrum */}
+      <div className="mt-16 bg-black/40 border border-white/10 rounded-2xl p-8">
+        <h2 className="text-lg font-semibold mb-4">
+          Decision Confidence Spectrum
+        </h2>
+
+        <div className="relative h-3 rounded-full bg-white/10 overflow-hidden">
+          <div className="absolute left-0 top-0 h-full w-1/3 bg-green-500/20" />
+          <div className="absolute left-1/3 top-0 h-full w-1/3 bg-yellow-500/20" />
+          <div className="absolute left-2/3 top-0 h-full w-1/3 bg-red-500/20" />
+
+          <div
+            className={`absolute top-0 h-full w-[3px] ${
+              mode === "quantum" ? "bg-purple-400" : "bg-blue-400"
+            }`}
+            style={{
+              left: mode === "quantum" ? "75%" : "55%",
+            }}
+          />
+        </div>
+
+        <div className="flex justify-between text-xs text-slate-400 mt-2">
+          <span>Low Confidence</span>
+          <span>Moderate</span>
+          <span>High Confidence</span>
+        </div>
+
+        <p className="text-sm text-slate-400 mt-4 max-w-3xl">
+          The indicator shows the typical operating region of similarity
+          decisions. Quantum-inspired mapping shifts decisions toward higher
+          confidence by improving feature separability prior to encryption.
+        </p>
       </div>
     </div>
   );

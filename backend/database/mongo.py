@@ -36,6 +36,7 @@ def insert_full_analysis_result(
 ):
     document = {
         "video_name": video_name,
+        "is_reference": not (classical_status == "Similar" or quantum_status == "Similar"),
 
         "classical": {
             "fingerprint": classical_fp,
@@ -57,13 +58,35 @@ def insert_full_analysis_result(
     collection.insert_one(document)
 
 # -----------------------------------
-# Fetch Records (MODE-SPECIFIC)
+# 🔹 FETCH REFERENCE RECORDS (FIX)
+# -----------------------------------
+
+def fetch_reference_records(mode: str):
+    """
+    Returns ONLY canonical reference videos.
+    Prevents duplicate-of-duplicate and identity errors.
+    """
+    records = list(collection.find(
+        {"is_reference": True},
+        {"_id": 0}
+    ))
+
+    references = []
+    for r in records:
+        if mode in r:
+            references.append({
+                "video_name": r["video_name"],
+                "fingerprint": r[mode]["fingerprint"]
+            })
+
+    return references
+
+
+# -----------------------------------
+# Fetch ALL Records (for dashboard / logs)
 # -----------------------------------
 
 def fetch_all_records(mode: str):
-    """
-    mode: 'classical' or 'quantum'
-    """
     records = list(collection.find({}, {"_id": 0}))
     extracted = []
 
@@ -81,25 +104,42 @@ def fetch_all_records(mode: str):
 # -----------------------------------
 
 def get_dashboard_summary(mode: str):
-    records = list(collection.find({}))
+    """
+    Summary computed ONLY from valid similarity events.
+    """
+    records = list(collection.find({}, {"_id": 0}))
 
     total = len(records)
     unique = 0
     duplicate = 0
+    similarity_scores = []
 
     for r in records:
-        if mode in r:
-            status = r[mode]["status"]
-            if status == "Unique":
-                unique += 1
-            elif status == "Similar":
-                duplicate += 1
+        if mode not in r:
+            continue
+
+        status = r[mode]["status"]
+
+        if status == "Unique":
+            unique += 1
+        elif status == "Similar":
+            duplicate += 1
+            score = r[mode].get("similarity_score")
+            if score is not None:
+                similarity_scores.append(score)
+
+    avg_similarity = (
+        sum(similarity_scores) / len(similarity_scores)
+        if similarity_scores else None
+    )
 
     return {
         "totalVideos": total,
         "uniqueVideos": unique,
-        "duplicateVideos": duplicate
+        "duplicateVideos": duplicate,
+        "avgSimilarity": avg_similarity
     }
+
 
 # -----------------------------------
 # DASHBOARD RECENT ANALYSIS
@@ -116,12 +156,8 @@ def get_recent_analysis(mode: str, limit=10):
                 "name": r["video_name"],
                 "status": r[mode]["status"],
                 "score": r[mode]["similarity_score"],
-                "mode": mode,  # 🔴 REQUIRED
+                "mode": mode,
                 "date": r["created_at"].strftime("%Y-%m-%d"),
             })
-
-    return formatted
-
-
 
     return formatted

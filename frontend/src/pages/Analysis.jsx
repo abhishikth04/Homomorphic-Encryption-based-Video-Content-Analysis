@@ -3,57 +3,55 @@ import { motion } from "framer-motion";
 
 export default function Analysis() {
   const [mode, setMode] = useState("quantum");
+  const [summary, setSummary] = useState(null);
 
-  // Scroll fix
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+    fetch(`http://localhost:5000/dashboard/summary?mode=${mode}`)
+      .then(res => res.json())
+      .then(data => setSummary(data))
+      .catch(() => setSummary(null));
+  }, [mode]);
 
-  // Configuration (derived from system behavior)
   const config = {
     classical: {
       dimension: 512,
       threshold: 0.92,
-      baseSimilarity: 0.68,
-      robustness: "Moderate",
       color: "blue",
+      explanation:
+        "Classical deep fingerprints operate in a compact linear feature space, which may cause semantically similar videos to cluster closer together.",
     },
     quantum: {
       dimension: 1024,
       threshold: 0.95,
-      baseSimilarity: 0.81,
-      robustness: "High",
       color: "purple",
+      explanation:
+        "Quantum-inspired nonlinear mapping expands the feature space, improving separability under encrypted similarity computation.",
     },
   };
 
+  const avgSimilarity =
+    summary && summary.totalVideos > 0
+      ? summary.avgSimilarity ?? 0.0
+      : 0.0;
+
   const data = config[mode];
-
-  // 🔹 Semi-dynamic similarity (visual only, honest)
-  const [avgSimilarity, setAvgSimilarity] = useState(data.baseSimilarity);
-
-  useEffect(() => {
-    const jitter =
-      (Math.random() * 0.015 - 0.007) + data.baseSimilarity;
-    setAvgSimilarity(Math.min(Math.max(jitter, 0), 1));
-  }, [mode, data.baseSimilarity]);
 
   return (
     <div className="min-h-screen bg-[#0b0f19] text-white px-10 py-10">
-      {/* Header */}
+      {/* ================= HEADER ================= */}
       <div className="mb-10">
         <h1 className="text-3xl font-bold">
-          Encrypted Similarity Analysis
+          Encrypted Decision Analysis
         </h1>
-        <p className="text-slate-400 mt-2 max-w-2xl">
-          This view explains how similarity decisions are formed inside the
-          privacy-preserving analysis engine without decrypting video data.
+        <p className="text-slate-400 mt-2 max-w-3xl">
+          This page explains how similarity decisions are formed inside the
+          encrypted analysis pipeline.
         </p>
       </div>
 
-      {/* Mode Toggle */}
+      {/* ================= MODE TOGGLE ================= */}
       <div className="flex gap-4 mb-12">
-        {["classical", "quantum"].map((m) => (
+        {["classical", "quantum"].map(m => (
           <button
             key={m}
             onClick={() => setMode(m)}
@@ -67,89 +65,86 @@ export default function Analysis() {
               }`}
           >
             {m === "quantum"
-              ? "Quantum-Inspired Mode"
-              : "Classical Mode"}
+              ? "Quantum-Inspired Space"
+              : "Classical Space"}
           </button>
         ))}
       </div>
 
-      {/* Metric Cards */}
+      {/* ================= METRICS ================= */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-14">
         <Metric title="Feature Dimension" value={`${data.dimension}-D`} />
         <Metric title="Decision Threshold" value={data.threshold} />
         <Metric
-          title="Avg Similarity"
-          value={`${(avgSimilarity * 100).toFixed(1)}%`}
+          title="Average Similarity"
+          value={(avgSimilarity * 100).toFixed(2) + "%"}
         />
-        <Metric title="Robustness Level" value={data.robustness} />
+        <Metric
+          title="Encrypted Records"
+          value={summary ? summary.totalVideos : "—"}
+        />
       </div>
 
-      {/* Similarity Space */}
-      <div className="bg-black/40 rounded-2xl p-8 border border-white/10">
-        <h2 className="text-lg font-semibold mb-6">
-          Similarity Decision Space
+      {/* ================= SIMILARITY BAR ================= */}
+      <div className="bg-black/40 rounded-2xl p-8 border border-white/10 mb-14">
+        <h2 className="text-lg font-semibold mb-4">
+          Observed Similarity Distribution
         </h2>
 
-        {/* Bar Container */}
-        <div className="relative">
-          <div className="relative h-3 rounded-full bg-white/10 overflow-hidden">
-            <motion.div
-              className={`h-full ${
-                mode === "quantum"
-                  ? "bg-purple-400"
-                  : "bg-blue-400"
-              }`}
-              initial={{ width: 0 }}
-              animate={{ width: `${avgSimilarity * 100}%` }}
-              transition={{ duration: 0.8 }}
-            />
-          </div>
+        <div className="relative h-3 rounded-full bg-white/10 overflow-hidden">
+          {/* Average Similarity */}
+          <motion.div
+            className={`h-full ${
+              mode === "quantum"
+                ? "bg-purple-400"
+                : "bg-blue-400"
+            }`}
+            initial={{ width: 0 }}
+            animate={{ width: `${Math.min(avgSimilarity * 100, 100)}%` }}
+            transition={{ duration: 0.8 }}
+          />
 
-          {/* Threshold Marker (BOUND) */}
+          {/* Threshold Marker */}
           <div
-            className="absolute top-5 text-xs text-slate-300"
-            style={{
-              left: `${data.threshold * 100}%`,
-              transform: "translateX(-50%)",
-            }}
-          >
-            ▲ Threshold ({data.threshold})
-          </div>
+            className="absolute top-0 h-full w-[2px] bg-yellow-400"
+            style={{ left: `${data.threshold * 100}%` }}
+          />
         </div>
 
-        <p className="text-slate-400 text-sm mt-10 max-w-xl">
-          Videos whose encrypted similarity exceeds the threshold are flagged
-          as duplicates. Quantum-inspired mapping increases feature
-          separability, enabling stricter thresholds without increasing false
-          positives.
+        <div className="flex justify-between text-xs text-slate-400 mt-2">
+          <span>0.0</span>
+          <span>Threshold ({data.threshold})</span>
+          <span>1.0</span>
+        </div>
+
+        <p className="text-sm text-slate-400 mt-4 max-w-3xl">
+          The bar shows the average encrypted similarity observed across recent
+          analyses. Videos exceeding the threshold are flagged as duplicates.
         </p>
       </div>
 
-      {/* Explanation */}
-      <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* ================= EXPLANATION ================= */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <InfoCard
-          title="Why Classical Mode?"
-          text="Uses compact deep fingerprints and linear similarity evaluation.
-          Efficient and suitable for smaller encrypted databases."
+          title="How to Interpret This"
+          text="Average similarity reflects the typical closeness between query videos and stored encrypted references. It is an aggregate metric, not a prediction."
         />
         <InfoCard
-          title="Why Quantum-Inspired Mode?"
-          text="Expands the feature space using nonlinear transformations,
-          improving separability under encryption and stabilizing similarity
-          decisions."
+          title="Why Modes Behave Differently"
+          text={data.explanation}
         />
       </div>
     </div>
   );
 }
 
-/* ---------- Components ---------- */
+/* ================= COMPONENTS ================= */
 
 function Metric({ title, value }) {
   return (
     <div className="bg-black/40 border border-white/10 rounded-2xl p-6">
       <p className="text-sm text-slate-400">{title}</p>
-      <h3 className="text-2xl font-bold mt-2">{value}</h3>
+      <h3 className="text-xl font-semibold mt-2">{value}</h3>
     </div>
   );
 }
@@ -158,7 +153,9 @@ function InfoCard({ title, text }) {
   return (
     <div className="bg-black/40 border border-white/10 rounded-2xl p-6">
       <h4 className="font-semibold mb-2">{title}</h4>
-      <p className="text-sm text-slate-400 leading-relaxed">{text}</p>
+      <p className="text-sm text-slate-400 leading-relaxed">
+        {text}
+      </p>
     </div>
   );
 }

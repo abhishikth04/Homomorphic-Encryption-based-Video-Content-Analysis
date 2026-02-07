@@ -15,16 +15,17 @@ export default function ResultSection({
 
   const isUnique = result?.status?.toLowerCase() === "unique";
   const score = result?.score;
-  const threshold = 0.9; // UI-only reference
+  const matched = result?.matched;
   const mode = result?.mode || "quantum";
 
-  /* ----------------------------
-     Confidence Estimation (UI)
-  ---------------------------- */
+  // UI-only threshold (backend decides real one)
+  const threshold = 0.9;
+
+  // Confidence explanation (UI logic only)
   let confidence = "Medium";
   if (score !== null) {
-    if (isUnique && score < threshold - 0.15) confidence = "High";
-    else if (!isUnique && score > threshold + 0.05) confidence = "High";
+    if (!isUnique && score > threshold + 0.05) confidence = "High";
+    else if (isUnique && score < threshold - 0.15) confidence = "High";
     else if (Math.abs(score - threshold) < 0.05) confidence = "Low";
   }
 
@@ -41,7 +42,7 @@ export default function ResultSection({
           scale: resetting ? 0.95 : 1,
         }}
         transition={{ duration: 0.9, ease: "easeInOut" }}
-        className={`rounded-2xl p-12 max-w-2xl w-full
+        className={`rounded-2xl p-12 max-w-3xl w-full
           border backdrop-blur-lg shadow-[0_30px_80px_rgba(0,0,0,0.6)]
           ${
             isUnique
@@ -68,9 +69,9 @@ export default function ResultSection({
         </p>
 
         {/* =======================
-            DECISION METRICS
+            METRICS
         ======================= */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           <Metric label="Decision" value={isUnique ? "Unique" : "Duplicate"} />
           <Metric label="Confidence" value={confidence} />
           <Metric
@@ -80,59 +81,81 @@ export default function ResultSection({
         </div>
 
         {/* =======================
-            SIMILARITY BAR
+            VIEW STATISTICS TOGGLE
         ======================= */}
-        {score !== null && (
-          <div className="mb-8">
-            <p className="text-sm text-gray-400 mb-2">
-              Similarity vs Adaptive Threshold
-            </p>
-
-            <div className="relative h-3 rounded-full bg-white/10 overflow-hidden">
-              <div
-                className={`absolute h-full ${
-                  isUnique ? "bg-green-400" : "bg-red-400"
-                }`}
-                style={{ width: `${Math.min(score * 100, 100)}%` }}
-              />
-
-              {/* Threshold Marker */}
-              <div
-                className="absolute top-0 h-full w-[2px] bg-yellow-400"
-                style={{ left: `${threshold * 100}%` }}
-              />
-            </div>
-
-            <div className="flex justify-between text-xs text-gray-400 mt-2">
-              <span>0.0</span>
-              <span>Threshold ({threshold})</span>
-              <span>1.0</span>
-            </div>
+        {!isUnique && (
+          <div className="text-center mb-8">
+            <button
+              onClick={() => setShowStats(!showStats)}
+              className="px-6 py-2 rounded-xl border border-white/20
+                         text-slate-200 hover:bg-white/10 transition font-medium"
+            >
+              {showStats ? "Hide Match Statistics" : "View Match Statistics"}
+            </button>
           </div>
         )}
 
         {/* =======================
-            EXPLANATION
+            MATCH STATISTICS PANEL
         ======================= */}
-        <div className="text-sm text-gray-300 mb-8 leading-relaxed">
-          {mode === "quantum" ? (
-            <p>
-              Quantum-inspired feature mapping expands the video fingerprint
-              before encryption, improving separability during encrypted
-              similarity computation.
+        {showStats && !isUnique && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            transition={{ duration: 0.5 }}
+            className="rounded-xl bg-black/40 border border-white/10 p-6 mb-8"
+          >
+            <h3 className="text-lg font-semibold mb-4 text-white">
+              Encrypted Match Insights
+            </h3>
+
+            {/* Matched Video */}
+            <p className="text-sm text-slate-300 mb-4">
+              Matched Reference Video:
+              <span className="block text-white font-medium mt-1">
+                {matched}
+              </span>
             </p>
-          ) : (
-            <p>
-              Classical deep fingerprints are compared directly using cosine
-              similarity under adaptive thresholding.
+
+            {/* Similarity Bar */}
+            <div className="mb-4">
+              <p className="text-xs text-slate-400 mb-2">
+                Similarity Score vs Decision Threshold
+              </p>
+
+              <div className="relative h-3 rounded-full bg-white/10">
+                <div
+                  className="absolute h-full bg-red-400 rounded-full"
+                  style={{ width: `${Math.min(score * 100, 100)}%` }}
+                />
+
+                {/* Threshold Marker */}
+                <div
+                  className="absolute top-0 h-full w-[2px] bg-yellow-400"
+                  style={{ left: `${threshold * 100}%` }}
+                />
+              </div>
+
+              <div className="flex justify-between text-xs text-slate-400 mt-2">
+                <span>0.0</span>
+                <span>Threshold</span>
+                <span>1.0</span>
+              </div>
+            </div>
+
+            {/* Explanation */}
+            <p className="text-sm text-slate-400 leading-relaxed">
+              The uploaded video exceeds the similarity threshold when compared
+              against encrypted reference fingerprints. The system therefore
+              flags it as a duplicate without decrypting any stored data.
             </p>
-          )}
-        </div>
+          </motion.div>
+        )}
 
         {/* =======================
-            ACTION BUTTONS
+            ACTIONS
         ======================= */}
-        <div className="flex flex-wrap justify-center gap-4">
+        <div className="flex justify-center gap-4">
           <button
             onClick={onReset}
             className="px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 transition font-medium"
@@ -147,100 +170,20 @@ export default function ResultSection({
           >
             Go to Dashboard
           </button>
-
-          <button
-            onClick={() => setShowStats(!showStats)}
-            className="px-8 py-3 rounded-xl border border-yellow-400/30 text-yellow-300
-                       hover:bg-yellow-400/10 transition font-medium"
-          >
-            {showStats ? "Hide Match Statistics" : "View Match Statistics"}
-          </button>
         </div>
-
-        {/* =======================
-            EXPANDED STATISTICS
-        ======================= */}
-        {showStats && score !== null && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="mt-10 p-8 rounded-2xl bg-black/40 border border-white/10"
-          >
-            <h3 className="text-xl font-semibold mb-6">
-              Similarity Match Analysis
-            </h3>
-
-            {/* MATCHED VIDEO */}
-            {result.matched && (
-              <div className="mb-6">
-                <p className="text-sm text-slate-400 mb-1">
-                  Matched Reference Video
-                </p>
-                <p className="text-lg font-medium text-white">
-                  {result.matched}
-                </p>
-              </div>
-            )}
-
-            {/* STATS GRID */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <StatBox
-                label="Similarity Score"
-                value={score.toFixed(4)}
-              />
-              <StatBox
-                label="Threshold Margin"
-                value={`${((score - threshold) * 100).toFixed(2)}%`}
-                highlight
-              />
-              <StatBox
-                label="Decision Confidence"
-                value={confidence}
-              />
-            </div>
-
-            <p className="text-sm text-slate-400 leading-relaxed">
-              The decision margin indicates how far the similarity score lies
-              from the adaptive threshold. Larger margins imply stronger
-              confidence in the system’s encrypted similarity decision.
-            </p>
-          </motion.div>
-        )}
       </motion.div>
     </section>
   );
 }
 
 /* -----------------------
-   Metric Card
+   Small Metric Card
 ----------------------- */
 function Metric({ label, value }) {
   return (
     <div className="rounded-xl bg-black/40 border border-white/10 p-4 text-center">
       <p className="text-xs text-gray-400 mb-1">{label}</p>
       <p className="text-lg font-semibold text-white">{value}</p>
-    </div>
-  );
-}
-
-/* -----------------------
-   Statistics Box
------------------------ */
-function StatBox({ label, value, highlight }) {
-  return (
-    <div
-      className={`rounded-xl border border-white/10 p-4 text-center
-        ${highlight ? "bg-yellow-500/10" : "bg-black/40"}`}
-    >
-      <p className="text-xs text-slate-400 mb-1">{label}</p>
-      <p
-        className={`text-lg font-semibold ${
-          highlight ? "text-yellow-400" : "text-white"
-        }`}
-      >
-        {value}
-      </p>
     </div>
   );
 }

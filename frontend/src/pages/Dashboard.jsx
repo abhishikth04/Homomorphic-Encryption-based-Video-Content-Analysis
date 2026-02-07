@@ -7,6 +7,7 @@ import AnalysisTable from "../components/AnalysisTable";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+
   const [mode, setMode] = useState("quantum");
 
   const [summary, setSummary] = useState({
@@ -39,11 +40,17 @@ export default function Dashboard() {
     <div className="min-h-screen bg-[#0b0f19] text-white">
       <DashNavbar />
 
-      {/* MODE INDICATOR */}
+      {/* ============================
+          SYSTEM STATE HEADER
+      ============================ */}
       <div className="px-10 pt-6">
-        <div className="rounded-xl border border-white/10 bg-black/40 backdrop-blur-md px-6 py-4 flex items-center justify-between">
+        <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md px-6 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          
+          {/* Mode Description */}
           <div>
-            <p className="text-xs text-slate-400">Active Analysis Space</p>
+            <p className="text-xs uppercase tracking-wide text-slate-400">
+              Active Similarity Space
+            </p>
             <p
               className={`text-sm font-semibold mt-1 ${
                 mode === "quantum"
@@ -52,18 +59,23 @@ export default function Dashboard() {
               }`}
             >
               {mode === "quantum"
-                ? "Quantum-Inspired Encrypted Similarity Space"
-                : "Classical Encrypted Feature Space"}
+                ? "Quantum-Inspired Encrypted Feature Space"
+                : "Classical Deep Feature Space"}
+            </p>
+            <p className="text-xs text-slate-400 mt-1 max-w-md">
+              All similarity decisions, statistics, and logs below are derived
+              from this analysis space.
             </p>
           </div>
 
+          {/* Mode Toggle */}
           <div className="flex gap-2">
             <button
               onClick={() => setMode("classical")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition
                 ${
                   mode === "classical"
-                    ? "bg-blue-600 text-white shadow"
+                    ? "bg-blue-600 text-white"
                     : "bg-gray-800 text-gray-400 hover:bg-gray-700"
                 }`}
             >
@@ -75,7 +87,7 @@ export default function Dashboard() {
               className={`px-4 py-2 rounded-lg text-sm font-medium transition
                 ${
                   mode === "quantum"
-                    ? "bg-purple-700 text-white shadow"
+                    ? "bg-purple-700 text-white"
                     : "bg-gray-800 text-gray-400 hover:bg-gray-700"
                 }`}
             >
@@ -85,65 +97,50 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <main className="px-10 py-8 space-y-14">
+      {/* ============================
+          MAIN CONTENT
+      ============================ */}
+      <main className="px-10 py-10 space-y-14">
 
-        {/* SUMMARY */}
+        {/* SYSTEM OVERVIEW */}
         <section>
-          <h2 className="text-lg font-semibold text-slate-200 mb-4">
-            System Snapshot
+          <h2 className="text-lg font-semibold text-slate-200 mb-1">
+            System Overview
           </h2>
+          <p className="text-sm text-slate-400 mb-4">
+            Aggregate statistics derived from encrypted similarity decisions.
+          </p>
           <SummaryCards data={summary} />
         </section>
 
-        {/* ANALYSIS LOG */}
+        {/* RECENT ANALYSIS LOG */}
         <section>
+          <h2 className="text-lg font-semibold text-slate-200 mb-1">
+            Encrypted Analysis Log
+          </h2>
+          <p className="text-sm text-slate-400 mb-4">
+            Most recent video comparisons performed by the system.
+          </p>
           <AnalysisTable data={recent} />
         </section>
 
-        {/* EXPLORATION CARDS */}
-        <section>
-          <h2 className="text-lg font-semibold text-slate-200 mb-4">
-            Explore the System
-          </h2>
+        {/* NAVIGATION ACTIONS */}
+        <section className="flex flex-wrap gap-4">
+          <button
+            onClick={() => navigate("/analysis")}
+            className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 transition font-medium"
+          >
+            Explore Encrypted Decision Analysis
+          </button>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Analysis */}
-            <div
-              onClick={() => navigate("/analysis")}
-              className="cursor-pointer rounded-2xl border border-white/10
-                         bg-black/40 backdrop-blur-md p-6
-                         hover:bg-white/5 hover:scale-[1.02]
-                         transition shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
-            >
-              <h3 className="text-base font-semibold text-blue-400 mb-2">
-                Encrypted Decision Analysis
-              </h3>
-              <p className="text-sm text-slate-400 leading-relaxed">
-                Visualize how encrypted fingerprints are compared,
-                how thresholds adapt, and how decisions are formed
-                without decryption.
-              </p>
-            </div>
-
-            {/* Performance */}
-            <div
-              onClick={() => navigate("/performance")}
-              className="cursor-pointer rounded-2xl border border-white/10
-                         bg-black/40 backdrop-blur-md p-6
-                         hover:bg-white/5 hover:scale-[1.02]
-                         transition shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
-            >
-              <h3 className="text-base font-semibold text-purple-400 mb-2">
-                System Performance Metrics
-              </h3>
-              <p className="text-sm text-slate-400 leading-relaxed">
-                Inspect similarity distributions, adaptive thresholds,
-                and compare classical vs quantum-inspired behavior.
-              </p>
-            </div>
-          </div>
+          <button
+            onClick={() => navigate("/performance")}
+            className="px-6 py-3 rounded-xl border border-white/20 text-slate-200
+                       hover:bg-white/10 hover:border-white/30 transition font-medium"
+          >
+            View System Performance Metrics
+          </button>
         </section>
-
       </main>
     </div>
   );
